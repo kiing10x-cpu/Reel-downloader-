@@ -1,5 +1,5 @@
 # Core — required
-python-telegram-bot==21.6
+python-telegram-bot==21.10
 yt-dlp>=2024.8.6
 
 # Optional — enable extra features, bot runs fine without them
