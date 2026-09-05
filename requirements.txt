@@ -1,0 +1,12 @@
+# Core — required
+python-telegram-bot==21.6
+yt-dlp>=2024.8.6
+
+# Optional — enable extra features, bot runs fine without them
+imageio-ffmpeg      # portable ffmpeg binary, used only if system ffmpeg is missing
+psutil              # RAM/CPU/disk stats shown on the admin Activity screen
+qrcode[pil]          # locally generated branded UPI payment QR codes
+matplotlib           # charts embedded in the PDF export (/exportpdf)
+reportlab             # PDF export itself
+cryptography         # encrypted local backups
+pymongo               # optional MongoDB storage backend (Settings > Mongo Plugin)

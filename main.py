@@ -1,0 +1,248 @@
+from export_backup import *
+
+
+def build_app() -> Application:
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+
+    # Group -1 runs BEFORE every handler added below (group 0, the default).
+    # This is the actual enforcement point for "no button works until
+    # agree + join" — see cb_global_button_gate's docstring.
+    app.add_handler(CallbackQueryHandler(cb_global_button_gate), group=-1)
+
+    app.add_handler(CallbackQueryHandler(cb_go_start, pattern="^go_start$"))
+    app.add_handler(CommandHandler("start", cmd_start))
+    app.add_handler(CommandHandler("help", cmd_help))
+    app.add_handler(CommandHandler("language", cmd_language))
+    app.add_handler(CommandHandler("admin", cmd_admin))
+    app.add_handler(CommandHandler("broadcast", cmd_broadcast))
+    app.add_handler(CommandHandler("dbstatus", cmd_dbstatus))
+    app.add_handler(CommandHandler("mongodb", cmd_mongodb))
+    app.add_handler(CommandHandler("health", cmd_health))
+    app.add_handler(CommandHandler("database", cmd_database))
+    app.add_handler(CommandHandler("updatebackup", cmd_updatebackup))
+    app.add_handler(CommandHandler("export", cmd_export))
+    app.add_handler(CommandHandler("exportusers", cmd_exportusers))
+    app.add_handler(CommandHandler("exportpdf", cmd_exportpdf))
+    app.add_handler(CommandHandler("ping", cmd_ping))
+    app.add_handler(CommandHandler("block", cmd_block))
+    app.add_handler(CommandHandler("unblock", cmd_unblock))
+    app.add_handler(CommandHandler("cancel", cmd_cancel))
+    app.add_handler(MessageHandler(filters.COMMAND, cmd_unknown))
+
+    app.add_handler(CallbackQueryHandler(cb_agree_terms, pattern="^agree_terms$"))
+    app.add_handler(CallbackQueryHandler(cb_report_copyright, pattern="^report_copyright$"))
+    app.add_handler(CallbackQueryHandler(cb_support_start, pattern="^support_start$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_block_link, pattern="^adm_block_link:"))
+    app.add_handler(CallbackQueryHandler(cb_adm_block_domain, pattern="^adm_block_domain:"))
+    app.add_handler(CallbackQueryHandler(cb_adm_owner_contact_set, pattern="^adm_owner_contact_set$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_owner_contact_clear, pattern="^adm_owner_contact_clear$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_logger_channel_set, pattern="^adm_logger_channel_set$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_activity_channel_set, pattern="^adm_activity_channel_set$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_force_join")(cb_adm_force_join), pattern="^adm_force_join$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_leaderboard")(cb_adm_leaderboard), pattern="^adm_leaderboard$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_post_leaderboard, pattern="^adm_post_leaderboard$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_share")(cb_adm_share), pattern="^adm_share$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_share_url_set, pattern="^adm_share_url_set$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_share_url_clear, pattern="^adm_share_url_clear$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_force_join_set, pattern="^adm_force_join_set$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_force_join_clear, pattern="^adm_force_join_clear$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_force_join_remove, pattern="^adm_force_join_remove$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_force_join_test, pattern="^adm_force_join_test$"))
+
+    # Reel action buttons
+    app.add_handler(CallbackQueryHandler(cb_get_caption, pattern="^get_caption$"))
+    app.add_handler(CallbackQueryHandler(cb_copy_caption, pattern="^copy_caption$"))
+    app.add_handler(CallbackQueryHandler(cb_get_audio, pattern="^get_audio$"))
+    app.add_handler(CallbackQueryHandler(cb_remove_reel, pattern="^remove_reel$"))
+    app.add_handler(CallbackQueryHandler(cb_download_another, pattern="^download_another$"))
+    app.add_handler(CallbackQueryHandler(cb_check_force_join, pattern="^check_force_join$"))
+    app.add_handler(ChatMemberHandler(cm_track_groups, ChatMemberHandler.MY_CHAT_MEMBER))
+    app.add_handler(ChatJoinRequestHandler(handle_force_join_request))
+
+    app.add_handler(CallbackQueryHandler(cb_ticket_close, pattern="^tk_close:"))
+    app.add_handler(CallbackQueryHandler(cb_ticket_reopen, pattern="^tk_reopen:"))
+    app.add_handler(CallbackQueryHandler(cb_support_resolve, pattern="^sup_resolve:"))
+
+    app.add_handler(CallbackQueryHandler(cb_gift_menu, pattern="^gift_menu$"))
+    app.add_handler(CallbackQueryHandler(cb_gift_plan, pattern="^gift_plan:"))
+    app.add_handler(CallbackQueryHandler(cb_gift_plan_stars, pattern="^gift_plan_stars:"))
+    app.add_handler(CallbackQueryHandler(cb_gift_plan_upi, pattern="^gift_plan_upi:"))
+    app.add_handler(CallbackQueryHandler(cb_gift_stars, pattern="^gift_stars$"))
+    app.add_handler(CallbackQueryHandler(cb_gift_stars_custom, pattern="^gift_stars_custom$"))
+    app.add_handler(CallbackQueryHandler(cb_gift_stars_amount, pattern="^gift_stars_amt:"))
+    app.add_handler(CallbackQueryHandler(cb_gift_dismiss, pattern="^gift_dismiss$"))
+    app.add_handler(CallbackQueryHandler(cb_view_leaderboard, pattern="^view_leaderboard$"))
+    app.add_handler(CallbackQueryHandler(cb_gift_upi, pattern="^gift_upi$"))
+    app.add_handler(CallbackQueryHandler(cb_gift_upi_paid, pattern="^gift_upi_paid:"))
+    app.add_handler(CallbackQueryHandler(cb_gift_upi_confirm, pattern="^gift_upi_confirm:"))
+    app.add_handler(CallbackQueryHandler(cb_gift_upi_decline, pattern="^gift_upi_decline:"))
+    app.add_handler(PreCheckoutQueryHandler(cmd_precheckout))
+    app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, cmd_successful_payment))
+    app.add_handler(CallbackQueryHandler(cb_nav, pattern="^nav:"))
+    app.add_handler(CallbackQueryHandler(cb_toggle_menu_button, pattern="^tgl:"))
+    app.add_handler(CallbackQueryHandler(cb_settings_toggle, pattern="^stgl:"))
+    app.add_handler(CallbackQueryHandler(cb_styleset, pattern="^styleset:"))
+    app.add_handler(CallbackQueryHandler(cb_noop, pattern="^noop$"))
+
+    app.add_handler(CallbackQueryHandler(cb_adm_home, pattern="^adm_home$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_activity")(cb_adm_activity), pattern="^adm_activity$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_clear_activity, pattern="^adm_clear_activity$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_fix_now, pattern="^adm_fix:"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_selftest")(cb_adm_selftest), pattern="^adm_selftest$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_plugins")(cb_adm_plugins), pattern="^adm_plugins$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_mongo_plugin")(cb_adm_mongo_plugin), pattern="^adm_mongo_plugin$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_mongo_test, pattern="^adm_mongo_test$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_mongo_set, pattern="^adm_mongo_set$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_mongo_disconnect_confirm, pattern="^adm_mongo_disconnect_confirm$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_mongo_disconnect_do, pattern="^adm_mongo_disconnect_do$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_cmdtest")(cb_adm_cmdtest), pattern="^adm_cmdtest$"))
+    app.add_handler(CallbackQueryHandler(cb_run_cmd, pattern="^run_cmd:"))
+    app.add_handler(CallbackQueryHandler(cb_adm_back, pattern="^adm_back$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_stats")(cb_adm_stats), pattern="^adm_stats$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_notifications")(cb_adm_notifications), pattern="^adm_notifications$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("ai_check")(cb_ai_check), pattern="^ai_check$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_users")(cb_adm_users), pattern="^adm_users$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_users_list, pattern="^adm_users_list$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_groups_list, pattern="^adm_groups_list$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_users_msg, pattern="^adm_users_msg$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_check_user, pattern="^adm_check_user$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_live")(cb_adm_live), pattern="^adm_live$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_quickban, pattern="^adm_quickban$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_notify_route_cycle, pattern="^adm_notify_route_cycle$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_broadcast")(cb_adm_broadcast), pattern="^adm_broadcast$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_start_broadcast, pattern="^adm_start_broadcast$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_start_broadcast_confirm, pattern="^adm_start_broadcast_confirm$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_bc_new, pattern="^adm_bc_new$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_bc_log, pattern="^adm_bc_log$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_bc_delmenu")(cb_adm_bc_delmenu), pattern="^adm_bc_delmenu$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_bc_delmonth, pattern="^adm_bc_delmonth:"))
+    app.add_handler(CallbackQueryHandler(cb_adm_bc_delconfirm, pattern="^adm_bc_delconfirm:"))
+    app.add_handler(CallbackQueryHandler(cb_adm_bc_deldo, pattern="^adm_bc_deldo:"))
+
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_menu_ui")(cb_adm_menu_ui), pattern="^adm_menu_ui$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_menu_edit, pattern="^adm_menu_edit:"))
+    app.add_handler(CallbackQueryHandler(cb_adm_menu_txt, pattern="^adm_menu_txt:"))
+    app.add_handler(CallbackQueryHandler(cb_adm_menu_style, pattern="^adm_menu_style:"))
+    app.add_handler(CallbackQueryHandler(cb_adm_menu_parsemode, pattern="^adm_menu_parsemode:"))
+    app.add_handler(CallbackQueryHandler(cb_adm_menu_img, pattern="^adm_menu_img:"))
+    app.add_handler(CallbackQueryHandler(cb_adm_menu_rmimg, pattern="^adm_menu_rmimg:"))
+    app.add_handler(CallbackQueryHandler(cb_adm_menu_autodel, pattern="^adm_menu_autodel:"))
+    app.add_handler(CallbackQueryHandler(cb_adm_menu_btns, pattern="^adm_menu_btns:"))
+    app.add_handler(CallbackQueryHandler(cb_adm_menu_trans, pattern="^adm_menu_trans:"))
+    app.add_handler(CallbackQueryHandler(cb_adm_menu_trans_edit, pattern="^adm_menu_trans_edit:"))
+    app.add_handler(CallbackQueryHandler(cb_setlang, pattern="^setlang:"))
+    app.add_handler(CallbackQueryHandler(cb_maint_notify_me, pattern="^maint_notify_me$"))
+    app.add_handler(CallbackQueryHandler(cb_maint_notify_me_done, pattern="^maint_notify_me_done$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_btn_add, pattern="^adm_btn_add:"))
+    app.add_handler(CallbackQueryHandler(cb_adm_btn_edit, pattern="^adm_btn_edit:"))
+    app.add_handler(CallbackQueryHandler(cb_adm_btn_del, pattern="^adm_btn_del:"))
+    app.add_handler(CallbackQueryHandler(cb_adm_btn_style, pattern="^adm_btn_style:"))
+    app.add_handler(CallbackQueryHandler(cb_btn_type_pick, pattern="^btntype:"))
+
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_settings")(cb_adm_settings), pattern="^adm_settings$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_set_premium_emoji, pattern="^adm_set_premium_emoji$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_maintenance")(cb_adm_maintenance), pattern="^adm_maintenance$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_maint_setmsg, pattern="^adm_maint_setmsg$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_lang_manage, pattern="^adm_lang_manage$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_lang_add, pattern="^adm_lang_add$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_lang_add_do, pattern="^adm_lang_add_do:"))
+    app.add_handler(CallbackQueryHandler(cb_adm_lang_remove, pattern="^adm_lang_remove$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_lang_remove_do, pattern="^adm_lang_remove_do:"))
+    app.add_handler(CallbackQueryHandler(cb_adm_set_autodelete, pattern="^adm_set_autodelete$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_autoreply_list, pattern="^adm_autoreply_list$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_autoreply_add, pattern="^adm_autoreply_add$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_autoreply_del, pattern="^adm_autoreply_del$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_manage_admins, pattern="^adm_manage_admins$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_add_admin, pattern="^adm_add_admin$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_remove_admin, pattern="^adm_remove_admin$"))
+    app.add_handler(CallbackQueryHandler(cb_newadmin_toggle, pattern="^newadmin_perm:"))
+    app.add_handler(CallbackQueryHandler(cb_newadmin_all, pattern="^newadmin_perm_all$"))
+    app.add_handler(CallbackQueryHandler(cb_newadmin_none, pattern="^newadmin_perm_none$"))
+    app.add_handler(CallbackQueryHandler(cb_newadmin_confirm, pattern="^newadmin_confirm$"))
+    app.add_handler(CallbackQueryHandler(cb_newadmin_cancel, pattern="^newadmin_cancel$"))
+    app.add_handler(CallbackQueryHandler(cb_admperm_edit, pattern="^admperm_edit:"))
+    app.add_handler(CallbackQueryHandler(cb_editperm_toggle, pattern="^editperm_perm:"))
+    app.add_handler(CallbackQueryHandler(cb_editperm_all, pattern="^editperm_perm_all$"))
+    app.add_handler(CallbackQueryHandler(cb_editperm_none, pattern="^editperm_perm_none$"))
+    app.add_handler(CallbackQueryHandler(cb_editperm_confirm, pattern="^editperm_confirm$"))
+    app.add_handler(CallbackQueryHandler(cb_editperm_cancel, pattern="^editperm_cancel$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_restore_info, pattern="^adm_restore_info$"))
+    app.add_handler(CallbackQueryHandler(cb_help_update_backup_info, pattern="^help_update_backup_info$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_update_backup")(cb_adm_update_backup), pattern="^adm_update_backup$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_update_backup_run, pattern="^adm_update_backup_run$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_export_database, pattern="^adm_export_database$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_owner_contact")(cb_adm_owner_contact), pattern="^adm_owner_contact$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_logger_channel")(cb_adm_logger_channel), pattern="^adm_logger_channel$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_activity_channel")(cb_adm_activity_channel), pattern="^adm_activity_channel$"))
+
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_premium")(cb_adm_premium), pattern="^adm_premium$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_premium_users, pattern="^adm_premium_users$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_premium_grant, pattern="^adm_premium_grant$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_plan_add, pattern="^adm_plan_add$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_plan_toggle, pattern="^adm_plan_toggle:"))
+    app.add_handler(CallbackQueryHandler(cb_adm_plan_del, pattern="^adm_plan_del:"))
+    app.add_handler(CallbackQueryHandler(cb_adm_set_dailylimit, pattern="^adm_set_dailylimit$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_upi")(cb_adm_upi), pattern="^adm_upi$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_upi_set, pattern="^adm_upi_set$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_upi_clear, pattern="^adm_upi_clear$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_devsettings")(cb_adm_devsettings), pattern="^adm_devsettings$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_dev_id, pattern="^adm_dev_id$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_dev_link, pattern="^adm_dev_link$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_support_settings")(cb_adm_support_settings), pattern="^adm_support_settings$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_group_set, pattern="^adm_group_set$"))
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_tickets")(cb_adm_tickets), pattern="^adm_tickets$"))
+
+    app.add_handler(CallbackQueryHandler(nav_tracked("adm_danger")(cb_adm_danger), pattern="^adm_danger$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_clear_bclog, pattern="^adm_clear_bclog$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_delete_chat_msgs, pattern="^adm_delete_chat_msgs$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_reset_menus_confirm, pattern="^adm_reset_menus_confirm$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_reset_menus_do, pattern="^adm_reset_menus_do$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_reset_confirm, pattern="^adm_reset_confirm$"))
+    app.add_handler(CallbackQueryHandler(cb_adm_reset_do, pattern="^adm_reset_do$"))
+    app.add_handler(CallbackQueryHandler(cb_restore_confirm, pattern="^restore_confirm$"))
+    app.add_handler(CallbackQueryHandler(cb_restore_cancel, pattern="^restore_cancel$"))
+
+    app.add_handler(MessageHandler(filters.Document.ALL & filters.ChatType.PRIVATE, handle_restore_upload))
+    app.add_handler(MessageHandler((filters.PHOTO | filters.VIDEO) & filters.ChatType.PRIVATE, handle_admin_media))
+    # Covers photo/video/etc too, not just text — ticket replies and
+    # admin media both need to reach handle_text to forward correctly.
+    app.add_handler(
+        MessageHandler(
+            (filters.TEXT | filters.PHOTO | filters.VIDEO | filters.Document.ALL
+             | filters.VOICE | filters.AUDIO | filters.ANIMATION | filters.Sticker.ALL)
+            & ~filters.COMMAND,
+            handle_text,
+        )
+    )
+
+    app.add_error_handler(global_error_handler)
+
+    if app.job_queue is not None:
+        if BACKUP_INTERVAL_HOURS > 0:
+            app.job_queue.run_repeating(
+                scheduled_backup_job, interval=timedelta(hours=BACKUP_INTERVAL_HOURS),
+                first=timedelta(hours=BACKUP_INTERVAL_HOURS),
+            )
+        app.job_queue.run_repeating(inactive_reengage_job, interval=timedelta(hours=24), first=timedelta(hours=24))
+
+    # Load any drop-in feature files from plugins/ LAST, so a plugin can
+    # never conflict with or shadow a built-in command/callback pattern
+    # registered above.
+    load_plugins(app)
+
+    return app
+
+
+def main():
+    if not BOT_TOKEN:
+        raise SystemExit("BOT_TOKEN env var is required.")
+    if not OWNER_ID:
+        log.warning("OWNER_ID is not set — owner-only commands will be unreachable.")
+    load_data()
+    app = build_app()
+    log.info("Bot starting...")
+    app.run_polling(allowed_updates=Update.ALL_TYPES)
+
+
+if __name__ == "__main__":
+    main()
