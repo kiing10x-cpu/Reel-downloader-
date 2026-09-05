@@ -647,7 +647,6 @@ async def handle_restore_upload(update: Update, context: ContextTypes.DEFAULT_TY
 
 
 async def cb_restore_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global BOT_DATA
     query = update.callback_query
     await query.answer()
     if not is_owner(update.effective_user.id):
@@ -658,7 +657,7 @@ async def cb_restore_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE)
         return
     before_path = make_backup_snapshot(reason="pre_restore")
     before_users = len(BOT_DATA["users"])
-    BOT_DATA = _deep_merge_defaults(incoming)
+    _replace_bot_data(_deep_merge_defaults(incoming))
     save_data()
     BOT_DATA["restore_log"].append(
         {"by": update.effective_user.id, "at": datetime.utcnow().isoformat(),

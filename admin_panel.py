@@ -2968,9 +2968,8 @@ async def cb_adm_reset_do(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def _do_reset_all(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global BOT_DATA
     make_backup_snapshot(reason="pre_reset")
-    BOT_DATA = json.loads(json.dumps(DEFAULT_DATA))
+    _replace_bot_data(json.loads(json.dumps(DEFAULT_DATA)))
     save_data()
     await update.message.reply_text(to_small_caps("✅ reset complete. the previous data is safely stored in a backup."))
 

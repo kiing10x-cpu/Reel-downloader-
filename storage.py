@@ -871,6 +871,16 @@ _caption_cache = {}  # (chat_id, message_id) -> {"caption": str, "url": str}, in
 CAPTION_CACHE_MAX = 500
 
 
+def _replace_bot_data(new_data: dict) -> None:
+    # Every other module got its own reference to this exact BOT_DATA
+    # object via "from storage import *" — rebinding the name here would
+    # only update storage.py's own namespace, leaving every other module
+    # pointed at the old (now-stale) dict. Clearing and refilling the same
+    # object in place keeps every module looking at live, current data.
+    BOT_DATA.clear()
+    BOT_DATA.update(new_data)
+
+
 def _deep_merge_defaults(data: dict) -> dict:
     merged = json.loads(json.dumps(DEFAULT_DATA))
     for k, v in data.items():
@@ -1047,7 +1057,7 @@ def _apply_seed_files_if_present() -> bool:
         except Exception as e:
             log.warning("Update Backup: could not read %s: %s", SEED_USERS_FILE, e)
     if seed:
-        BOT_DATA = _deep_merge_defaults(seed)
+        _replace_bot_data(_deep_merge_defaults(seed))
         return True
     return False
 
@@ -1083,17 +1093,17 @@ def load_data():
         doc = col.find_one({"_id": "bot_data"})
         if doc:
             doc.pop("_id", None)
-            BOT_DATA = _deep_merge_defaults(doc)
+            _replace_bot_data(_deep_merge_defaults(doc))
             log.info("Loaded data from MongoDB.")
         else:
             if os.path.exists(DATA_FILE):
                 with open(DATA_FILE, "r", encoding="utf-8") as f:
                     local = json.load(f)
-                BOT_DATA = _deep_merge_defaults(local)
+                _replace_bot_data(_deep_merge_defaults(local))
                 col.update_one({"_id": "bot_data"}, {"$set": BOT_DATA}, upsert=True)
                 log.info("Migrated local JSON data into MongoDB.")
             else:
-                BOT_DATA = json.loads(json.dumps(DEFAULT_DATA))
+                _replace_bot_data(json.loads(json.dumps(DEFAULT_DATA)))
                 _apply_seed_files_if_present()
                 col.update_one({"_id": "bot_data"}, {"$set": BOT_DATA}, upsert=True)
         _apply_language_pack_migration()
@@ -1101,10 +1111,10 @@ def load_data():
 
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r", encoding="utf-8") as f:
-            BOT_DATA = _deep_merge_defaults(json.load(f))
+            _replace_bot_data(_deep_merge_defaults(json.load(f)))
         log.info("Loaded data from local JSON file.")
     else:
-        BOT_DATA = json.loads(json.dumps(DEFAULT_DATA))
+        _replace_bot_data(json.loads(json.dumps(DEFAULT_DATA)))
         _apply_seed_files_if_present()
         save_data()
     _apply_language_pack_migration()
