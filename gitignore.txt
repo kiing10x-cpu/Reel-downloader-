@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+bot_data.json
+backup.key
+mongo_config.json
+bot_settings_seed.json
+bot_users_seed.json
+
+downloads/
+backups/
+*.zip
